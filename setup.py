@@ -69,7 +69,7 @@ def calculate_user_prefix(options):
     elif options.user or not _is_root():
         user = True
 
-    return (user, prefix)
+    return user, prefix
 
 
 class PostDevelopCommand(develop):
