@@ -7,19 +7,22 @@ from hashlib import blake2b
 from .user_namespace import BuiltInManager
 
 
-ESCAPE_TABLE = str.maketrans({'\a': r'\a',
-                              '\b': r'\b',
-                              '\f': r'\f',
-                              '\n': r'\n',
-                              '\r': r'\r',
-                              '\t': r'\t',
-                              '\v': r'\v',
-                              '\'': r'\'',
-                              '\"': r'\"'})
+ESCAPE_TABLE = str.maketrans(
+    {
+        '\a': r'\a',
+        '\b': r'\b',
+        '\f': r'\f',
+        '\n': r'\n',
+        '\r': r'\r',
+        '\t': r'\t',
+        '\v': r'\v',
+        '\'': r'\'',
+        '\"': r'\"',
+    }
+)
 
 
 class CodeObject:
-
     @staticmethod
     def describe_symbol(sym):
         output = StringIO()
@@ -27,9 +30,16 @@ class CodeObject:
         print("Symbol:", sym.get_name(), file=output)
 
         for prop in [
-                'referenced', 'imported', 'parameter',
-                'global', 'declared_global', 'local',
-                'free', 'assigned', 'namespace']:
+            'referenced',
+            'imported',
+            'parameter',
+            'global',
+            'declared_global',
+            'local',
+            'free',
+            'assigned',
+            'namespace',
+        ]:
             if getattr(sym, 'is_' + prop)():
                 print('    is', prop, file=output)
 
@@ -42,8 +52,11 @@ class CodeObject:
             print(prefix + s, *args, **kwargs)
 
         assert isinstance(st, symt.SymbolTable)
-        print_d('Symtable: type=%s, id=%s, name=%s' % (
-            st.get_type(), st.get_id(), st.get_name()), file=output)
+        print_d(
+            'Symtable: type=%s, id=%s, name=%s'
+            % (st.get_type(), st.get_id(), st.get_name()),
+            file=output,
+        )
         print_d('  nested:', st.is_nested(), file=output)
         print_d('  has children:', st.has_children(), file=output)
         print_d('  identifiers:', list(st.get_identifiers()), file=output)
@@ -51,7 +64,8 @@ class CodeObject:
         if recursive:
             for child_st in st.get_children():
                 CodeObject.describe_symtable(
-                    child_st, recursive, indent + 5, output=output)
+                    child_st, recursive, indent + 5, output=output
+                )
 
         return output.getvalue()
 
@@ -68,7 +82,11 @@ class CodeObject:
 
             # and sym.get_name() != 'show_graph'
 
-            if sym.is_global() and not sym.get_name() in user_ns.global_ns['__builtins__'] and not sym.get_name() in imports:
+            if (
+                sym.is_global()
+                and not sym.get_name() in user_ns.global_ns['__builtins__']
+                and not sym.get_name() in imports
+            ):
                 yield SymbolWrapper(sym)
 
         for a in symbols.get_children():
@@ -78,8 +96,11 @@ class CodeObject:
     def _find_output_variables(st):
         # return one top level defined variable, only including support for one
         # as of now
-        output_vars = [SymbolWrapper(sym) for sym in st.get_symbols()
-                       if sym.is_assigned() or sym.is_imported()]
+        output_vars = [
+            SymbolWrapper(sym)
+            for sym in st.get_symbols()
+            if sym.is_assigned() or sym.is_imported()
+        ]
 
         num_imports = sum(map(lambda sym: int(sym.is_imported()), output_vars))
 
@@ -91,10 +112,12 @@ class CodeObject:
     def __init__(self, code: str, key: bytes, manager_ns: BuiltInManager):
         self.symbol_table: symtable = symtable(code, '<string>', 'exec')
         self.code: str = code
-        self.input_vars: List[SymbolWrapper] = CodeObject._find_input_variables(self.symbol_table, manager_ns
-                                                                                )
-        self.output_vars: FrozenSet[SymbolWrapper] = CodeObject._find_output_variables(self.symbol_table
-                                                                                       )
+        self.input_vars: List[SymbolWrapper] = CodeObject._find_input_variables(
+            self.symbol_table, manager_ns
+        )
+        self.output_vars: FrozenSet[SymbolWrapper] = CodeObject._find_output_variables(
+            self.symbol_table
+        )
 
         h = blake2b(digest_size=10, key=key)
         if len(self.output_vars) > 0:
@@ -141,4 +164,5 @@ class SymbolWrapper:
 class MultipleDefinitionsError(Exception):
     """ Attempted to define more than one local variable
     """
+
     pass

@@ -10,21 +10,25 @@ class DuplicateCodeObjectAddedException(Exception):
 
     Code object identity is determined by a tuple of its exported variables
     """
+
     pass
 
 
 class DuplicateEdgeAddedException(Exception):
     """Dependency graph already contains given edge"""
+
     pass
 
 
 class CodeObjectNotFoundException(Exception):
     """Code object is missing from dependency tracker"""
+
     pass
 
 
 class EdgeNotFoundException(Exception):
     """Edge is missing from dependency tracker"""
+
     pass
 
 
@@ -33,6 +37,7 @@ class CyclicDependencyIntroducedException(Exception):
 
     Cycles are currently not supported in the reactive programming model
     """
+
     pass
 
 
@@ -54,10 +59,8 @@ class DependencyTracker(Generic[NodeT]):
         # exported variable(s)
         self._nodes = TransactionSet[NodeT]()
         # exported variable(s) -> set of descendent variable(s)
-        self._edges = TransactionDict[NodeT,
-                                      Set[NodeT]]()
-        self._backward_edges = TransactionDict[NodeT, Set[NodeT]](
-        )
+        self._edges = TransactionDict[NodeT, Set[NodeT]]()
+        self._backward_edges = TransactionDict[NodeT, Set[NodeT]]()
 
     def get_nodes(self) -> Set[NodeT]:
         return set(self._nodes)
@@ -98,8 +101,7 @@ class DependencyTracker(Generic[NodeT]):
         max_order_value = max(self._ordering.values(), default=0)
         self._ordering[defined_vars] = max_order_value + 1
 
-    def add_edge(self, from_output_vars: NodeT,
-                 to_output_vars: NodeT) -> bool:
+    def add_edge(self, from_output_vars: NodeT, to_output_vars: NodeT) -> bool:
         """Add new edge to dependency graph
 
         Return boolean, False if edge already existed, True if edge was successfully added
@@ -124,17 +126,14 @@ class DependencyTracker(Generic[NodeT]):
             change_backward = set()
             visited = defaultdict(lambda: False)
 
-            self._dfs_forward(
-                to_output_vars, visited, change_forward, upper_bound)
-            self._dfs_backward(
-                from_output_vars, visited, change_backward, lower_bound)
+            self._dfs_forward(to_output_vars, visited, change_forward, upper_bound)
+            self._dfs_backward(from_output_vars, visited, change_backward, lower_bound)
 
             self._reorder(change_forward, change_backward)
 
         return True
 
-    def _dfs_forward(self, node,
-                     visited, output, upper_bound):
+    def _dfs_forward(self, node, visited, output, upper_bound):
         visited[node] = True
         output.add(node)
 
@@ -157,10 +156,12 @@ class DependencyTracker(Generic[NodeT]):
                 self._dfs_backward(parent, visited, output, lower_bound)
 
     def _reorder(self, change_forward, change_backward):
-        change_forward = sorted(list(change_forward),
-                                key=lambda code: self._ordering[code])
-        change_backward = sorted(list(change_backward),
-                                 key=lambda code: self._ordering[code])
+        change_forward = sorted(
+            list(change_forward), key=lambda code: self._ordering[code]
+        )
+        change_backward = sorted(
+            list(change_backward), key=lambda code: self._ordering[code]
+        )
 
         L = list()
         R = list()
@@ -188,8 +189,7 @@ class DependencyTracker(Generic[NodeT]):
         for parent in self._edges[defined_vars]:
             self.delete_edge(parent, defined_vars)
 
-    def delete_edge(self, from_output_vars: NodeT,
-                    to_output_vars: NodeT):
+    def delete_edge(self, from_output_vars: NodeT, to_output_vars: NodeT):
         if from_output_vars not in self._nodes or to_output_vars not in self._nodes:
             raise CodeObjectNotFoundException()
 
@@ -199,19 +199,18 @@ class DependencyTracker(Generic[NodeT]):
         self._edges[from_output_vars].remove(to_output_vars)
         self._backward_edges[to_output_vars].remove(from_output_vars)
 
-    def get_descendants(
-            self, defined_vars: NodeT) -> List[NodeT]:
+    def get_descendants(self, defined_vars: NodeT) -> List[NodeT]:
         """Get all code objects that transitively depend on the given object"""
 
         if defined_vars not in self._nodes:
             raise CodeObjectNotFoundException()
 
         visited = set()
-        unique_descendants = set(
-            self._get_descendants(defined_vars, visited)) - {defined_vars}
+        unique_descendants = set(self._get_descendants(defined_vars, visited)) - {
+            defined_vars
+        }
 
-        return sorted(unique_descendants,
-                      key=lambda node: self._ordering[node])
+        return sorted(unique_descendants, key=lambda node: self._ordering[node])
 
     def _get_descendants(self, output_vars, visited):
         if output_vars not in visited:
@@ -227,5 +226,8 @@ class DependencyTracker(Generic[NodeT]):
         return defined_vars in self._nodes
 
     def order_nodes(self, reverse=False) -> List[NodeT]:
-        return sorted(self._nodes,
-                      key=lambda node: self._ordering[node.output_vars], reverse=reverse)
+        return sorted(
+            self._nodes,
+            key=lambda node: self._ordering[node.output_vars],
+            reverse=reverse,
+        )
