@@ -1,0 +1,6 @@
+dependencies:
+  - ipython>=4.0.0
+  - jupyter_client
+  - tornado>=4.0
+  - ipykernel>=4.8
+  - graphviz
