@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 
-from setuptools import setup
-from setuptools.command.develop import develop
-from setuptools.command.install import install
-from setuptools import Command
 import glob
-import argparse
 import json
 import os
-import sys
 import shutil
+import sys
 
+from setuptools import setup
+from setuptools import Command
+from setuptools.command.develop import develop
+from setuptools.command.install import install
+
+# kernelspec
 kernel_json = {
     'argv': [sys.executable, '-m', 'reactivepy', '-f', '{connection_file}'],
     'display_name': 'Reactive Python',
@@ -19,10 +20,13 @@ kernel_json = {
 
 
 common_options = [
-    ('user=', None, 'Install KernelSpec in user homedirectory'),
-    ('sys-prefix=', None,
-     'Install KernelSpec in sys.prefix. Useful in conda / virtualenv'),
-    ('prefix=', None, 'Install KernelSpec in this prefix')
+    ('user=', None, 'Install KernelSpec in user home directory'),
+    (
+        'sys-prefix=',
+        None,
+        'Install KernelSpec in sys.prefix. Useful in conda / virtualenv',
+    ),
+    ('prefix=', None, 'Install KernelSpec in this prefix'),
 ]
 
 
@@ -41,7 +45,8 @@ def install_kernel_spec(user=True, prefix=None):
 
         print('Installing Jupyter kernel spec to', prefix)
         KernelSpecManager().install_kernel_spec(
-            td, 'reactivepy', user=user, prefix=prefix)
+            td, 'reactivepy', user=user, prefix=prefix
+        )
 
 
 def _is_root():
@@ -111,6 +116,7 @@ class PostInstallCommand(install):
 
 class CleanCommand(Command):
     """Custom clean command to tidy up the project root."""
+
     CLEAN_FILES = './build ./dist ./*.pyc ./*.tgz ./*.egg-info'.split(' ')
 
     user_options = []
@@ -127,50 +133,45 @@ class CleanCommand(Command):
         for path_spec in self.CLEAN_FILES:
             # Make paths absolute and relative to this path
             abs_paths = glob.glob(
-                os.path.normpath(
-                    os.path.join(
-                        HERE, path_spec)))
+                os.path.normpath(os.path.join(HERE, path_spec))
+            )
             for path in [str(p) for p in abs_paths]:
                 if not path.startswith(HERE):
                     # Die if path in CLEAN_FILES is absolute + outside this
                     # directory
                     raise ValueError(
-                        "%s is not a path inside %s" %
-                        (path, HERE))
+                        "%s is not a path inside %s" % (path, HERE)
+                    )
                 print('removing %s' % os.path.relpath(path))
                 shutil.rmtree(path)
 
 
-setup(name='reactivepy',
-      version='0.1.0',
-      description='Reactive Kernel for Jupyter',
-      author='Richa Gadgil, Takahiro Shimokobe, Declan Kelly',
-      author_email='dkelly.home@gmail.com',
-      url='https://github.com/jupytercalpoly/reactivepy',
-      packages=['reactivepy'],
-      package_data={'reactivepy': ["images/*.png"]},
-      license='BSD 3-Clause License',
-      requires=[
-          'ipython',
-          'jupyter_client', 'tornado',
-          'ipykernel',
-          'graphviz'
-      ],
-      install_requires=[
-          'ipython>=4.0.0',
-          'jupyter_client',
-          'tornado>=4.0',
-          'ipykernel>=4.8',
-          'graphviz'
-      ],
-      classifiers=[
-          'Intended Audience :: Developers',
-          'License :: OSI Approved :: BSD License',
-          'Programming Language :: Python :: 3',
-      ],
-      cmdclass={
-          'develop': PostDevelopCommand,
-          'install': PostInstallCommand,
-          'clean': CleanCommand
-      },
-      )
+setup(
+    name='reactivepy',
+    version='0.1.0',
+    description='Reactive Kernel for Jupyter',
+    author='Richa Gadgil, Takahiro Shimokobe, Declan Kelly',
+    author_email='dkelly.home@gmail.com',
+    url='https://github.com/jupytercalpoly/reactivepy',
+    packages=['reactivepy'],
+    package_data={'reactivepy': ["images/*.png"]},
+    license='BSD 3-Clause License',
+    requires=['ipython', 'jupyter_client', 'tornado', 'ipykernel', 'graphviz'],
+    install_requires=[
+        'ipython>=4.0.0',
+        'jupyter_client',
+        'tornado>=4.0',
+        'ipykernel>=4.8',
+        'graphviz',
+    ],
+    classifiers=[
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: BSD License',
+        'Programming Language :: Python :: 3',
+    ],
+    cmdclass={
+        'develop': PostDevelopCommand,
+        'install': PostInstallCommand,
+        'clean': CleanCommand,
+    },
+)
